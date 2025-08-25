@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
+import { PanelLeftIcon } from "lucide-react"
+import { useSidebar } from "@/components/ui/sidebar"
 
 interface User {
   id: string
@@ -22,6 +24,7 @@ export default function DashboardHeader() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const { toggleSidebar } = useSidebar()
 
   useEffect(() => {
     const getUser = async () => {
@@ -73,13 +76,12 @@ export default function DashboardHeader() {
 
   return (
     <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        {/* Logo and Brand */}
+      <div className="px-6 py-4 flex items-center justify-between">
+        {/* Logo */}
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
           <span className="text-xl font-bold text-gray-900">Cerulion</span>
         </div>
-
 
         {/* Profile Section */}
         <div className="flex items-center space-x-3">
@@ -147,7 +149,7 @@ export default function DashboardHeader() {
                         setIsProfileOpen(false)
                         // Add account settings logic here
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       Account Settings
                     </button>
