@@ -1,18 +1,16 @@
-import DashboardLayout from "@/components/dashboard/dashboard-layout"
+import DashboardHeader from "@/components/dashboard/header"
+import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import ServerCard from "@/components/dashboard/server-card"
 
 export default function DashboardPage() {
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome to your Cerulion Cloud dashboard. Monitor your infrastructure and manage your resources.
-          </p>
-        </div>
-        <ServerCard />
+    <div className="flex h-screen w-full">
+      <DashboardSidebar />
+      <div className="flex-1 flex flex-col">
+        <main className="flex-1 p-6 w-full">
+            <ServerCard />
+        </main>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

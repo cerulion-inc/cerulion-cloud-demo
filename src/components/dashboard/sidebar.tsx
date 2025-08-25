@@ -49,7 +49,7 @@ function SidebarContent_() {
 
   return (
     <div className="relative">
-      <Sidebar collapsible="icon" className="sticky top-0 h-svh">
+      <Sidebar collapsible="icon" className="sticky top-0 hidden h-svh border-l lg:flex">
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Dashboard</SidebarGroupLabel>
