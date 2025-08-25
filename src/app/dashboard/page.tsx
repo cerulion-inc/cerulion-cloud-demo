@@ -1,25 +1,18 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import DashboardHeader from "@/components/dashboard/header"
-import { DashboardSidebar } from "@/components/dashboard/sidebar"
+import DashboardLayout from "@/components/dashboard/dashboard-layout"
+import ServerCard from "@/components/dashboard/server-card"
 
 export default function DashboardPage() {
   return (
-    <div className="flex h-screen w-full">
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col">
-        <DashboardHeader />
-        <main className="flex-1 p-6 w-full">
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Simulator</CardTitle>
-              <CardDescription>Welcome to your Simulator</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Dashboard content will go here */}
-            </CardContent>
-          </Card>
-        </main>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome to your Cerulion Cloud dashboard. Monitor your infrastructure and manage your resources.
+          </p>
+        </div>
+        <ServerCard />
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

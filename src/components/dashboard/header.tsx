@@ -1,13 +1,12 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import { PanelLeftIcon } from "lucide-react"
-import { useSidebar } from "@/components/ui/sidebar"
 
 interface User {
   id: string
@@ -24,7 +23,6 @@ export default function DashboardHeader() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
-  const { toggleSidebar } = useSidebar()
 
   useEffect(() => {
     const getUser = async () => {
@@ -78,10 +76,10 @@ export default function DashboardHeader() {
     <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center space-x-2">
+        <Link href="/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
           <span className="text-xl font-bold text-gray-900">Cerulion</span>
-        </div>
+        </Link>
 
         {/* Profile Section */}
         <div className="flex items-center space-x-3">

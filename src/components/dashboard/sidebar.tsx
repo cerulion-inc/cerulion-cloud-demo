@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   Sidebar,
   SidebarContent,
@@ -11,7 +12,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { 
@@ -19,9 +19,6 @@ import {
   Settings, 
   LogOut,
   Home,
-  BarChart3,
-  Users,
-  FileText,
   ChevronLeft,
   ChevronRight
 } from "lucide-react"
@@ -30,32 +27,17 @@ import {
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/dashboard",
     icon: Home,
   },
   {
     title: "Simulator",
-    url: "#",
+    url: "/simulator",
     icon: Play,
   },
   {
-    title: "Analytics",
-    url: "#",
-    icon: BarChart3,
-  },
-  {
-    title: "Users",
-    url: "#",
-    icon: Users,
-  },
-  {
-    title: "Reports",
-    url: "#",
-    icon: FileText,
-  },
-  {
     title: "Settings",
-    url: "#",
+    url: "/dashboard/settings",
     icon: Settings,
   },
 ]
@@ -63,25 +45,36 @@ const items = [
 function SidebarContent_() {
   const { state, toggleSidebar } = useSidebar()
   const collapsed = state === "collapsed"
+  const pathname = usePathname()
 
   return (
     <div className="relative">
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible="icon" className="sticky top-0 h-svh">
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>Dashboard</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <a href={item.url} className="px-6 py-3 group-data-[collapsible=icon]:px-3 group-data-[collapsible=icon]:justify-center">
-                        <item.icon className="h-4 w-4" />
-                        <span className={collapsed ? "sr-only" : "ml-3"}>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {items.map((item) => {
+                  const isActive = pathname === item.url
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <Link 
+                          href={item.url} 
+                          className={`px-6 py-3 group-data-[collapsible=icon]:px-3 group-data-[collapsible=icon]:justify-center transition-colors ${
+                            isActive 
+                              ? "bg-accent text-accent-foreground" 
+                              : "hover:bg-accent hover:text-accent-foreground"
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span className={collapsed ? "sr-only" : "ml-3"}>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
