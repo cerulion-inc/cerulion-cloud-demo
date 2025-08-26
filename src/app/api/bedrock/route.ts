@@ -3,21 +3,21 @@ import { BedrockAgentRuntimeClient, InvokeAgentCommand } from '@aws-sdk/client-b
 
 // Initialize Bedrock client
 const bedrockClient = new BedrockAgentRuntimeClient({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.AMAZON_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.AMAZON_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AMAZON_SECRET_ACCESS_KEY!,
   },
 });
 
 export async function POST(request: NextRequest) {
   try {
     // Check if required environment variables are set
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    if (!process.env.AMAZON_ACCESS_KEY_ID || !process.env.AMAZON_SECRET_ACCESS_KEY) {
       console.error('Missing AWS credentials:', {
-        hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
-        hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
-        region: process.env.AWS_REGION
+        hasAccessKey: !!process.env.AMAZON_ACCESS_KEY_ID,
+        hasSecretKey: !!process.env.AMAZON_SECRET_ACCESS_KEY,
+        region: process.env.AMAZON_REGION
       });
       return NextResponse.json(
         { error: 'AWS credentials not configured' },

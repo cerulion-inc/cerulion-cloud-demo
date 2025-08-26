@@ -4,9 +4,9 @@ export async function GET(request: NextRequest) {
   try {
     // Check environment variables
     const envCheck = {
-      hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
-      hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
-      region: process.env.AWS_REGION || 'not set',
+      hasAccessKey: !!process.env.AMAZON_ACCESS_KEY_ID,
+      hasSecretKey: !!process.env.AMAZON_SECRET_ACCESS_KEY,
+      region: process.env.AMAZON_REGION || 'not set',
       agentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID || 'not set',
       nodeEnv: process.env.NODE_ENV,
     };
