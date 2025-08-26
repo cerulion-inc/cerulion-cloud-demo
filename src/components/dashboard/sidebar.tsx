@@ -64,7 +64,7 @@ export function DashboardSidebar({ ...props }: React.ComponentProps<typeof Sideb
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-3">
         <SidebarMenu>
           {items.map((item) => {
             const isActive = pathname === item.url

@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { Send, Bot, User } from "lucide-react"
+import { Send, Bot, User, RefreshCw } from "lucide-react"
 
 import {
   Sidebar,
@@ -9,77 +9,39 @@ import {
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
+import { useBedrockChat, ChatMessage } from "@/hooks/use-bedrock-chat"
 
-// Sample chat data
-const sampleMessages = [
-  {
-    id: 1,
-    type: "agent",
-    content: "Hello! I'm your AI assistant. How can I help you today?",
-    timestamp: "10:30 AM"
-  },
-  {
-    id: 2,
-    type: "user",
-    content: "Can you help me understand cloud computing?",
-    timestamp: "10:31 AM"
-  },
-  {
-    id: 3,
-    type: "agent",
-    content: "Of course! Cloud computing is the delivery of computing services over the internet. It includes servers, storage, databases, networking, software, analytics, and intelligence.",
-    timestamp: "10:31 AM"
-  },
-  {
-    id: 4,
-    type: "user",
-    content: "What are the main benefits?",
-    timestamp: "10:32 AM"
-  },
-  {
-    id: 5,
-    type: "agent",
-    content: "The main benefits include cost savings, scalability, flexibility, disaster recovery, and automatic software updates. Would you like me to elaborate on any of these?",
-    timestamp: "10:32 AM"
-  }
-]
+// Welcome message for new conversations
+const welcomeMessage: ChatMessage = {
+  id: 1,
+  type: "agent",
+  content: "Hello! I'm your AWS Bedrock AI assistant. How can I help you today?",
+  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
 
 export function SidebarRight({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const [messages, setMessages] = React.useState(sampleMessages)
   const [inputValue, setInputValue] = React.useState("")
-  const messagesEndRef = React.useRef<HTMLDivElement>(null)
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  React.useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+  
+  // Initialize Bedrock chat with your agent ID
+  // Replace 'your-agent-id' with your actual Bedrock agent ID
+  const { 
+    messages, 
+    isLoading, 
+    sendMessage, 
+    clearMessages, 
+    messagesEndRef 
+  } = useBedrockChat({ 
+    agentId: process.env.NEXT_PUBLIC_BEDROCK_AGENT_ID || 'your-agent-id',
+    initialMessages: [welcomeMessage]
+  })
 
   const handleSendMessage = () => {
-    if (inputValue.trim()) {
-      const newMessage = {
-        id: messages.length + 1,
-        type: "user" as const,
-        content: inputValue,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-      setMessages([...messages, newMessage])
+    if (inputValue.trim() && !isLoading) {
+      sendMessage(inputValue)
       setInputValue("")
-      
-      // Simulate agent response
-      setTimeout(() => {
-        const agentResponse = {
-          id: messages.length + 2,
-          type: "agent" as const,
-          content: "I understand your question. Let me provide you with a detailed response...",
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-        setMessages(prev => [...prev, agentResponse])
-      }, 1000)
     }
   }
 
@@ -90,6 +52,10 @@ export function SidebarRight({
     }
   }
 
+  const handleClearChat = () => {
+    clearMessages()
+  }
+
   return (
     <Sidebar
       collapsible="none"
@@ -97,8 +63,17 @@ export function SidebarRight({
       {...props}
     >
       <SidebarHeader className="border items-center">
-        <div className="flex items-center py-3">
+        <div className="flex items-center justify-between py-3 px-4">
           <span className="font-semibold">ISAAC Assistant</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClearChat}
+            className="h-8 w-8 p-0"
+            title="Clear chat"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </Button>
         </div>
       </SidebarHeader>
       <SidebarContent className="border-l border-b">
@@ -114,7 +89,13 @@ export function SidebarRight({
                     ? 'bg-black text-white' 
                     : 'bg-gray-200 text-gray-700'
                 }`}>
-                  {message.type === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                  {message.type === 'user' ? (
+                    <User className="w-4 h-4" />
+                  ) : message.isLoading ? (
+                    <Spinner size="sm" className="text-gray-600" />
+                  ) : (
+                    <Bot className="w-4 h-4" />
+                  )}
                 </div>
                 <div className={`rounded-lg px-3 py-2 ${
                   message.type === 'user'
@@ -140,13 +121,15 @@ export function SidebarRight({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
+              placeholder={isLoading ? "Agent is thinking..." : "Type your message..."}
               className="flex-1"
+              disabled={isLoading}
             />
             <Button 
               onClick={handleSendMessage}
               size="sm"
               className="px-3"
+              disabled={isLoading || !inputValue.trim()}
             >
               <Send className="w-4 h-4" />
             </Button>
