@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,17 @@ interface User {
   }
 }
 
+interface CachedUserData {
+  id: string
+  email: string
+  full_name?: string
+  avatar_url?: string
+  cached_at: number
+}
+
+const USER_CACHE_KEY = 'dashboard_user_cache'
+const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+
 export default function DashboardHeader() {
   const [user, setUser] = useState<User | null>(null)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -37,20 +48,103 @@ export default function DashboardHeader() {
   const supabase = createClient()
   const { toggleSidebar } = useSidebar()
 
+  // Cache user data in localStorage
+  const cacheUserData = useCallback((userData: User) => {
+    if (!userData) return
+    
+    const cachedData: CachedUserData = {
+      id: userData.id,
+      email: userData.email || '',
+      full_name: userData.user_metadata?.full_name,
+      avatar_url: userData.user_metadata?.avatar_url,
+      cached_at: Date.now()
+    }
+    
+    try {
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(cachedData))
+    } catch (error) {
+      console.warn('Failed to cache user data:', error)
+    }
+  }, [])
+
+  // Get cached user data from localStorage
+  const getCachedUserData = useCallback((): CachedUserData | null => {
+    try {
+      const cached = localStorage.getItem(USER_CACHE_KEY)
+      if (!cached) return null
+      
+      const cachedData: CachedUserData = JSON.parse(cached)
+      
+      // Check if cache is still valid
+      if (Date.now() - cachedData.cached_at > CACHE_DURATION) {
+        localStorage.removeItem(USER_CACHE_KEY)
+        return null
+      }
+      
+      return cachedData
+    } catch (error) {
+      console.warn('Failed to get cached user data:', error)
+      localStorage.removeItem(USER_CACHE_KEY)
+      return null
+    }
+  }, [])
+
+  // Clear cached user data
+  const clearCachedUserData = useCallback(() => {
+    try {
+      localStorage.removeItem(USER_CACHE_KEY)
+    } catch (error) {
+      console.warn('Failed to clear cached user data:', error)
+    }
+  }, [])
+
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      // First try to get cached data
+      const cachedData = getCachedUserData()
+      
+      if (cachedData) {
+        // Use cached data immediately for better UX
+        setUser({
+          id: cachedData.id,
+          email: cachedData.email,
+          user_metadata: {
+            full_name: cachedData.full_name,
+            avatar_url: cachedData.avatar_url
+          }
+        })
+      }
+      
+      // Then fetch fresh data from Supabase
+      const { data: { user: freshUser } } = await supabase.auth.getUser()
+      
+      if (freshUser) {
+        setUser(freshUser)
+        cacheUserData(freshUser)
+      } else if (cachedData) {
+        // If no fresh user but we have cached data, clear the cache
+        clearCachedUserData()
+        setUser(null)
+      }
     }
 
     getUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user)
+        cacheUserData(session.user)
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
+        clearCachedUserData()
+      } else if (session?.user) {
+        setUser(session.user)
+        cacheUserData(session.user)
+      }
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase])
+  }, [supabase, cacheUserData, getCachedUserData, clearCachedUserData])
 
   const handleSignOut = async () => {
     setLoading(true)
@@ -61,6 +155,7 @@ export default function DashboardHeader() {
         return
       }
       
+      clearCachedUserData()
       toast.success('Signed out successfully')
       router.push('/')
       router.refresh()
@@ -73,16 +168,19 @@ export default function DashboardHeader() {
     }
   }
 
+  // Memoize user data to prevent unnecessary re-renders
+  const memoizedUser = useMemo(() => user, [user])
+
   const getInitials = (name?: string) => {
     if (!name) return 'U'
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
   const getDisplayName = () => {
-    if (user?.user_metadata?.full_name) {
-      return user.user_metadata.full_name
+    if (memoizedUser?.user_metadata?.full_name) {
+      return memoizedUser.user_metadata.full_name
     }
-    return user?.email || 'User'
+    return memoizedUser?.email || 'User'
   }
 
   // Generate breadcrumbs based on current path
@@ -152,7 +250,7 @@ export default function DashboardHeader() {
 
         {/* Profile Section */}
         <div className="flex items-center space-x-3 ml-auto">
-          {user ? (
+          {memoizedUser ? (
             <div className="relative">
               <Button
                 variant="ghost"
@@ -162,23 +260,23 @@ export default function DashboardHeader() {
               >
                 {/* Avatar */}
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-                  {user.user_metadata?.avatar_url ? (
+                  {memoizedUser.user_metadata?.avatar_url ? (
                     <Image
-                      src={user.user_metadata.avatar_url}
+                      src={memoizedUser.user_metadata.avatar_url}
                       alt="Profile"
                       width={32}
                       height={32}
                       className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
-                    getInitials(user.user_metadata?.full_name)
+                    getInitials(memoizedUser.user_metadata?.full_name)
                   )}
                 </div>
                 
                 {/* User Info */}
                 <div className="hidden sm:block text-left">
                   <div className="text-sm font-medium text-gray-900">{getDisplayName()}</div>
-                  <div className="text-xs text-gray-500">{user.email}</div>
+                  <div className="text-xs text-gray-500">{memoizedUser.email}</div>
                 </div>
                 
                 {/* Dropdown Arrow */}
@@ -198,7 +296,7 @@ export default function DashboardHeader() {
                   {/* User Info Header */}
                   <div className="px-4 py-3 border-b border-gray-100">
                     <div className="text-sm font-medium text-gray-900">{getDisplayName()}</div>
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className="text-sm text-gray-500">{memoizedUser.email}</div>
                   </div>
                   
                   {/* Menu Items */}
