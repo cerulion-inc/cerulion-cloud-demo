@@ -1,12 +1,11 @@
 "use client"
 import * as React from "react"
-import { Plus, Send, Bot, User } from "lucide-react"
+import { Send, Bot, User } from "lucide-react"
 
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

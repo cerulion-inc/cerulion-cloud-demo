@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -18,6 +17,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import React from 'react'
+import Image from 'next/image'
 
 interface User {
   id: string
@@ -163,9 +163,11 @@ export default function DashboardHeader() {
                 {/* Avatar */}
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
                   {user.user_metadata?.avatar_url ? (
-                    <img 
-                      src={user.user_metadata.avatar_url} 
-                      alt="Profile" 
+                    <Image
+                      src={user.user_metadata.avatar_url}
+                      alt="Profile"
+                      width={32}
+                      height={32}
                       className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
