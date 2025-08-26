@@ -7,7 +7,7 @@ const ServerCard = () => {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push("/simulator");
+    router.push("/dashboard/simulator");
   };
 
   return (

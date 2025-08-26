@@ -5,17 +5,11 @@ import { Plus, Send, Bot, User } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
 
 // Sample chat data
 const sampleMessages = [
@@ -103,12 +97,12 @@ export function SidebarRight({
       className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
       {...props}
     >
-      <SidebarHeader className="border-sidebar-border border flex items-center px-4 h-12">
-        <div className="flex items-center space-x-2">
-          <span className="font-semibold">Isaac Assistant</span>
+      <SidebarHeader className="border items-center">
+        <div className="flex items-center py-3">
+          <span className="font-semibold">ISAAC Assistant</span>
         </div>
       </SidebarHeader>
-      <SidebarContent className="flex-1 flex flex-col border">
+      <SidebarContent className="border-l border-b">
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div

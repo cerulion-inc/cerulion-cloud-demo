@@ -23,13 +23,13 @@ import {
 // Menu items.
 const items = [
   {
-    title: "Home",
+    title: "Dashboard",
     url: "/dashboard",
     icon: Home,
   },
   {
     title: "Simulator",
-    url: "/simulator",
+    url: "/dashboard/simulator",
     icon: Play,
   },
   {
