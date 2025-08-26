@@ -6,7 +6,7 @@ export default function SimulatorLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="h-screen overflow-hidden [--header-height:3.5rem]">
       {children}
     </div>
   )

@@ -2,11 +2,22 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
+import { SidebarIcon } from "lucide-react"
+import { useSidebar } from "@/components/ui/sidebar"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import React from 'react'
 
 interface User {
   id: string
@@ -22,7 +33,9 @@ export default function DashboardHeader() {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
+  const { toggleSidebar } = useSidebar()
 
   useEffect(() => {
     const getUser = async () => {
@@ -72,17 +85,73 @@ export default function DashboardHeader() {
     return user?.email || 'User'
   }
 
+  // Generate breadcrumbs based on current path
+  const generateBreadcrumbs = (): Array<{title: string, href: string, isCurrent: boolean}> => {
+    const segments = pathname.split('/').filter(Boolean)
+    const breadcrumbs: Array<{title: string, href: string, isCurrent: boolean}> = []
+    
+    if (segments.length === 0) return breadcrumbs
+    
+    // Always start with Dashboard
+    breadcrumbs.push({
+      title: 'Dashboard',
+      href: '/dashboard',
+      isCurrent: segments.length === 1
+    })
+    
+    // Add other segments
+    for (let i = 1; i < segments.length; i++) {
+      const segment = segments[i]
+      const href = `/${segments.slice(0, i + 1).join('/')}`
+      const title = segment.charAt(0).toUpperCase() + segment.slice(1)
+      
+      breadcrumbs.push({
+        title,
+        href,
+        isCurrent: i === segments.length - 1
+      })
+    }
+    
+    return breadcrumbs
+  }
+
+  const breadcrumbs = generateBreadcrumbs()
+
   return (
-    <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="px-6 py-4 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
-          <span className="text-xl font-bold text-gray-900">Cerulion</span>
-        </Link>
+    <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
+      <div className="flex h-(--header-height) w-full items-center gap-2 px-4">
+        <Button
+          className="h-8 w-8"
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
+        >
+          <SidebarIcon />
+        </Button>
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        
+        {/* Breadcrumbs */}
+        <Breadcrumb className="hidden sm:block">
+          <BreadcrumbList>
+            {breadcrumbs.map((breadcrumb, index) => (
+              <React.Fragment key={breadcrumb.href}>
+                <BreadcrumbItem>
+                  {breadcrumb.isCurrent ? (
+                    <BreadcrumbPage>{breadcrumb.title}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink href={breadcrumb.href}>
+                      {breadcrumb.title}
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+                {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+              </React.Fragment>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
 
         {/* Profile Section */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 ml-auto">
           {user ? (
             <div className="relative">
               <Button

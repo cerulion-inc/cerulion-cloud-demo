@@ -100,15 +100,15 @@ export function SidebarRight({
   return (
     <Sidebar
       collapsible="none"
-      className="sticky top-0 hidden h-svh border-l lg:flex"
+      className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
       {...props}
     >
-      <SidebarHeader className="border-sidebar-border border-b flex items-center px-4 h-12">
+      <SidebarHeader className="border-sidebar-border border flex items-center px-4 h-12">
         <div className="flex items-center space-x-2">
           <span className="font-semibold">Isaac Assistant</span>
         </div>
       </SidebarHeader>
-      <SidebarContent className="flex-1 flex flex-col">
+      <SidebarContent className="flex-1 flex flex-col border">
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div
