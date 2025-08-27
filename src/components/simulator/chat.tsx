@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { Send, Bot, User, RefreshCw } from "lucide-react"
+import { Send, Bot, User, RefreshCw, AlertCircle } from "lucide-react"
 
 import {
   Sidebar,
@@ -24,9 +24,19 @@ export function SidebarRight({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const [inputValue, setInputValue] = React.useState("")
+  const [configError, setConfigError] = React.useState<string | null>(null)
+  
+  // Check if required environment variables are available
+  React.useEffect(() => {
+    const agentId = process.env.NEXT_PUBLIC_BEDROCK_AGENT_ID
+    if (!agentId || agentId === 'your-agent-id') {
+      setConfigError('Bedrock Agent ID not configured. Please check your environment variables.')
+    } else {
+      setConfigError(null)
+    }
+  }, [])
   
   // Initialize Bedrock chat with your agent ID
-  // Replace 'your-agent-id' with your actual Bedrock agent ID
   const { 
     messages, 
     isLoading, 
@@ -39,7 +49,7 @@ export function SidebarRight({
   })
 
   const handleSendMessage = () => {
-    if (inputValue.trim() && !isLoading) {
+    if (inputValue.trim() && !isLoading && !configError) {
       sendMessage(inputValue)
       setInputValue("")
     }
@@ -77,6 +87,20 @@ export function SidebarRight({
         </div>
       </SidebarHeader>
       <SidebarContent className="border-l border-b">
+        {/* Configuration Error Display */}
+        {configError && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md mx-4 mt-4">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <span className="text-sm text-red-800 font-medium">Configuration Error</span>
+            </div>
+            <p className="text-sm text-red-700 mt-1">{configError}</p>
+            <p className="text-xs text-red-600 mt-2">
+              This usually means environment variables are not set in your production deployment.
+            </p>
+          </div>
+        )}
+        
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div
@@ -121,15 +145,15 @@ export function SidebarRight({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder={isLoading ? "Agent is thinking..." : "Type your message..."}
+              placeholder={isLoading ? "Agent is thinking..." : configError ? "Chat disabled - configuration error" : "Type your message..."}
               className="flex-1"
-              disabled={isLoading}
+              disabled={isLoading || !!configError}
             />
             <Button 
               onClick={handleSendMessage}
               size="sm"
               className="px-3"
-              disabled={isLoading || !inputValue.trim()}
+              disabled={isLoading || !inputValue.trim() || !!configError}
             >
               <Send className="w-4 h-4" />
             </Button>

@@ -12,15 +12,21 @@ const bedrockClient = new BedrockAgentRuntimeClient({
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if required environment variables are set
-    if (!process.env.AMAZON_ACCESS_KEY_ID || !process.env.AMAZON_SECRET_ACCESS_KEY) {
-      console.error('Missing AWS credentials:', {
-        hasAccessKey: !!process.env.AMAZON_ACCESS_KEY_ID,
-        hasSecretKey: !!process.env.AMAZON_SECRET_ACCESS_KEY,
-        region: process.env.AMAZON_REGION
-      });
+    // Enhanced environment variable checking
+    const missingVars = [];
+    if (!process.env.AMAZON_ACCESS_KEY_ID) missingVars.push('AMAZON_ACCESS_KEY_ID');
+    if (!process.env.AMAZON_SECRET_ACCESS_KEY) missingVars.push('AMAZON_SECRET_ACCESS_KEY');
+    if (!process.env.AMAZON_REGION) missingVars.push('AMAZON_REGION');
+    if (!process.env.BEDROCK_AGENT_ALIAS_ID) missingVars.push('BEDROCK_AGENT_ALIAS_ID');
+    
+    if (missingVars.length > 0) {
+      console.error('Missing required environment variables:', missingVars);
       return NextResponse.json(
-        { error: 'AWS credentials not configured' },
+        { 
+          error: 'AWS credentials not configured', 
+          missing: missingVars,
+          message: 'Please check your environment variables in the Amplify console'
+        },
         { status: 500 }
       );
     }
@@ -34,10 +40,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Log the request for debugging
+    console.log('Bedrock API request:', {
+      agentId,
+      agentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID,
+      sessionId: sessionId || `session-${Date.now()}`,
+      messageLength: message.length,
+      region: process.env.AMAZON_REGION
+    });
+
     // Prepare the input for the Bedrock agent
     const input = {
       agentId: agentId,
-      agentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID || 'TSTALIASID',
+      agentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID!,
       sessionId: sessionId || `session-${Date.now()}`,
       inputText: message,
     };
@@ -57,6 +72,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.log('Bedrock API response received:', {
+      responseLength: responseText.length,
+      sessionId: input.sessionId
+    });
+
     return NextResponse.json({
       response: responseText,
       sessionId: input.sessionId,
@@ -68,11 +88,34 @@ export async function POST(request: NextRequest) {
     console.error('Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : 'Unknown'
+      name: error instanceof Error ? error.name : 'Unknown',
+      timestamp: new Date().toISOString()
     });
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to communicate with Bedrock agent';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      if (error.message.includes('credentials')) {
+        errorMessage = 'AWS credentials are invalid or expired';
+        statusCode = 401;
+      } else if (error.message.includes('region')) {
+        errorMessage = 'Invalid AWS region specified';
+        statusCode = 400;
+      } else if (error.message.includes('agent')) {
+        errorMessage = 'Invalid Bedrock agent ID or alias';
+        statusCode = 400;
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to communicate with Bedrock agent', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      { 
+        error: errorMessage, 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      },
+      { status: statusCode }
     );
   }
 }
