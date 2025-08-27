@@ -29,7 +29,7 @@ export default function SimulatorPage() {
                       </p>
                     </div>
                     <iframe 
-                      src="https://3.237.252.14:8443" 
+                      src="https://test-compute-1.cerulion.com" 
                       className="flex-1"
                       title="Simulation Environment"
                     />
