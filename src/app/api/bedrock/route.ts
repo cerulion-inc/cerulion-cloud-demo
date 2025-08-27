@@ -12,7 +12,16 @@ const bedrockClient = new BedrockAgentRuntimeClient({
 
 export async function POST(request: NextRequest) {
   try {
-    // Enhanced environment variable checking
+    // Enhanced environment variable checking with detailed logging
+    const envVars = {
+      AMAZON_ACCESS_KEY_ID: process.env.AMAZON_ACCESS_KEY_ID ? 'SET' : 'MISSING',
+      AMAZON_SECRET_ACCESS_KEY: process.env.AMAZON_SECRET_ACCESS_KEY ? 'SET' : 'MISSING',
+      AMAZON_REGION: process.env.AMAZON_REGION ? 'SET' : 'MISSING',
+      BEDROCK_AGENT_ALIAS_ID: process.env.BEDROCK_AGENT_ALIAS_ID ? 'SET' : 'MISSING',
+    };
+    
+    console.log('Environment variables status:', envVars);
+    
     const missingVars = [];
     if (!process.env.AMAZON_ACCESS_KEY_ID) missingVars.push('AMAZON_ACCESS_KEY_ID');
     if (!process.env.AMAZON_SECRET_ACCESS_KEY) missingVars.push('AMAZON_SECRET_ACCESS_KEY');
@@ -21,11 +30,14 @@ export async function POST(request: NextRequest) {
     
     if (missingVars.length > 0) {
       console.error('Missing required environment variables:', missingVars);
+      console.error('Environment variables status:', envVars);
       return NextResponse.json(
         { 
           error: 'AWS credentials not configured', 
           missing: missingVars,
-          message: 'Please check your environment variables in the Amplify console'
+          envStatus: envVars,
+          message: 'Please check your environment variables in the Amplify console',
+          timestamp: new Date().toISOString()
         },
         { status: 500 }
       );
@@ -46,7 +58,8 @@ export async function POST(request: NextRequest) {
       agentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID,
       sessionId: sessionId || `session-${Date.now()}`,
       messageLength: message.length,
-      region: process.env.AMAZON_REGION
+      region: process.env.AMAZON_REGION,
+      hasCredentials: !!(process.env.AMAZON_ACCESS_KEY_ID && process.env.AMAZON_SECRET_ACCESS_KEY)
     });
 
     // Prepare the input for the Bedrock agent
@@ -89,7 +102,13 @@ export async function POST(request: NextRequest) {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       name: error instanceof Error ? error.name : 'Unknown',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      envVars: {
+        hasAccessKey: !!process.env.AMAZON_ACCESS_KEY_ID,
+        hasSecretKey: !!process.env.AMAZON_SECRET_ACCESS_KEY,
+        hasRegion: !!process.env.AMAZON_REGION,
+        hasAgentAlias: !!process.env.BEDROCK_AGENT_ALIAS_ID
+      }
     });
     
     // Provide more specific error messages
@@ -113,7 +132,13 @@ export async function POST(request: NextRequest) {
       { 
         error: errorMessage, 
         details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        envVars: {
+          hasAccessKey: !!process.env.AMAZON_ACCESS_KEY_ID,
+          hasSecretKey: !!process.env.AMAZON_SECRET_ACCESS_KEY,
+          hasRegion: !!process.env.AMAZON_REGION,
+          hasAgentAlias: !!process.env.BEDROCK_AGENT_ALIAS_ID
+        }
       },
       { status: statusCode }
     );

@@ -53,20 +53,48 @@ export function useBedrockChat({ agentId, initialMessages = [] }: UseBedrockChat
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/bedrock', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: content.trim(),
-          agentId,
-          sessionId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Try the full production URL first, fallback to relative path
+      const apiUrls = [
+        'https://demo.cerulion.com/api/bedrock',
+        '/api/bedrock'
+      ];
+      
+      let response: Response | null = null;
+      let lastError: Error | null = null;
+      
+      // Try each URL until one works
+      for (const apiUrl of apiUrls) {
+        try {
+          console.log(`Trying API endpoint: ${apiUrl}`);
+          response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: content.trim(),
+              agentId,
+              sessionId,
+            }),
+          });
+          
+          if (response.ok) {
+            console.log(`Successfully connected to: ${apiUrl}`);
+            break; // Exit loop if successful
+          } else {
+            console.warn(`API endpoint ${apiUrl} returned status: ${response.status}`);
+            lastError = new Error(`HTTP error! status: ${response.status}`);
+          }
+        } catch (error) {
+          console.warn(`Failed to connect to ${apiUrl}:`, error);
+          lastError = error instanceof Error ? error : new Error('Unknown error');
+          continue; // Try next URL
+        }
+      }
+      
+      // If no URL worked, throw the last error
+      if (!response || !response.ok) {
+        throw lastError || new Error('All API endpoints failed');
       }
 
       const data = await response.json();
