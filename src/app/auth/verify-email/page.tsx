@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -10,7 +10,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('Verifying your email...')
   const router = useRouter()
@@ -23,7 +23,7 @@ export default function VerifyEmailPage() {
         const token_hash = searchParams.get('token_hash')
         const type = searchParams.get('type')
 
-        if (!token_hash || type !== 'email_confirmation') {
+        if (!token_hash || type !== 'signup') {
           setStatus('error')
           setMessage('Invalid verification link. Please check your email for the correct link.')
           return
@@ -32,7 +32,7 @@ export default function VerifyEmailPage() {
         // Verify the email
         const { error } = await supabase.auth.verifyOtp({
           token_hash,
-          type: 'email_confirmation'
+          type: 'signup'
         })
 
         if (error) {
@@ -139,5 +139,31 @@ export default function VerifyEmailPage() {
         shineColor={["#5ac8fa", "#007bff", "#5ac8fa"]}
       />
     </div>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="relative w-full max-w-md mx-auto rounded-lg">
+        <Card className="w-full relative overflow-hidden">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Loading...</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <Spinner className="w-8 h-8" />
+              <p className="text-muted-foreground">Initializing verification...</p>
+            </div>
+          </CardContent>
+        </Card>
+        <ShineBorder
+          className="absolute inset-0 pointer-events-none"
+          shineColor={["#5ac8fa", "#007bff", "#5ac8fa"]}
+        />
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   )
 }

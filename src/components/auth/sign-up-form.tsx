@@ -56,8 +56,8 @@ export default function SignUpForm() {
         password,
         options: {
           emailRedirectTo: process.env.NODE_ENV === 'production' 
-            ? 'https://app.cerulion.com/auth/callback'
-            : `${window.location.origin}/auth/callback`
+            ? 'https://app.cerulion.com/auth/verify-email'
+            : `${window.location.origin}/auth/verify-email`
         }
       })
 

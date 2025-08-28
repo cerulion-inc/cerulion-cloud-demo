@@ -51,7 +51,7 @@ export default function ForgotPasswordForm() {
           </CardHeader>
           <CardContent className="text-center">
             <p className="text-muted-foreground mb-4">
-              We've sent a password reset link to <strong>{email}</strong>
+              We&apos;ve sent a password reset link to <strong>{email}</strong>
             </p>
             <p className="text-sm text-muted-foreground">
               Click the link in your email to reset your password. The link will expire in 1 hour.
@@ -59,7 +59,7 @@ export default function ForgotPasswordForm() {
           </CardContent>
           <CardFooter className="flex justify-center text-sm">
             <p>
-              Didn't receive the email?{' '}
+              Didn&apos;t receive the email?{' '}
               <button 
                 onClick={() => setEmailSent(false)}
                 className="underline cursor-pointer"
@@ -83,7 +83,7 @@ export default function ForgotPasswordForm() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Reset Password</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset your password.
           </p>
         </CardHeader>
         <CardContent>

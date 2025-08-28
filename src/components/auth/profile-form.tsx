@@ -21,7 +21,7 @@ export default function ProfileForm() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [fullName, setFullName] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
-  const [loading, setLoading] = useState(false)
+
   const [saving, setSaving] = useState(false)
   const supabase = createClient()
 
