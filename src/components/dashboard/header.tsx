@@ -157,7 +157,7 @@ export default function DashboardHeader() {
       
       clearCachedUserData()
       toast.success('Signed out successfully')
-      router.push('/')
+      router.push('/auth/login')
       router.refresh()
     } catch (err) {
       console.error('Sign out error:', err)
